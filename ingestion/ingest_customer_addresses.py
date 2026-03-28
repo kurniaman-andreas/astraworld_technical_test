@@ -80,21 +80,40 @@ def ensure_table(engine, table: str) -> None:
         conn.execute(text(ddl))
 
 
-def run() -> None:
-    args = parse_args()
-    input_dir = Path(args.input_dir)
-    fallback_dir = Path(args.fallback_dir)
+def run(
+    input_dir: str = "data/raw/customer_addresses",
+    fallback_dir: str = "data/raw",
+    table: str = "customer_addresses_raw",
+) -> None:
+    input_dir = Path(input_dir)
+    fallback_dir = Path(fallback_dir)
 
     latest_file = find_latest_file(input_dir, fallback_dir)
+
     df = pd.read_csv(latest_file)
+
+    if df.empty:
+        raise ValueError(f"{latest_file} is empty!")
+
     df["created_at"] = pd.to_datetime(df["created_at"], errors="coerce")
 
     engine = create_engine(build_db_url())
-    ensure_table(engine, args.table)
-    df.to_sql(args.table, con=engine, if_exists="append", index=False)
+    ensure_table(engine, table)
 
-    print(f"Ingested {len(df)} rows from {latest_file} into {args.table}.")
+    with engine.begin() as conn:
+        df.to_sql(table, con=conn, if_exists="append", index=False)
+
+    print(f"Ingested {len(df)} rows from {latest_file} into {table}.")
+
+
+def main() -> None:
+    args = parse_args()
+    run(
+        input_dir=args.input_dir,
+        fallback_dir=args.fallback_dir,
+        table=args.table,
+    )
 
 
 if __name__ == "__main__":
-    run()
+    main()
