@@ -2,7 +2,7 @@
 
 ## Overview
 
-![Caption for the image](image-stack.png)
+![Caption for the image](img/image-stack.png)
 
 This repository contains a small data engineering project built with Apache Airflow and MySQL. The project bootstraps a MySQL warehouse, loads sample raw data, ingests daily customer address CSV files through Airflow, and provides SQL scripts for downstream cleaning and reporting.
 
